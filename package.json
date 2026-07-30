@@ -17,8 +17,10 @@
     "@angular/forms": "^22.0.0",
     "@angular/platform-browser": "^22.0.0",
     "@angular/router": "^22.0.0",
+    "@ngneat/overview": "^8.1.0",
     "@ngrx/effects": "^21.1.1",
     "@ngrx/store": "^21.1.1",
+    "@ngxpert/hot-toast": "^6.4.1",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },

@@ -7,7 +7,9 @@ import { FormErrors } from '../../shared/components/form-errors';
 import { Store } from '@ngrx/store';
 import { authAction } from '../../shared/store/auth-action';
 import { authFeature } from '../../shared/store/auth-feature';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { HotToastService } from '@ngxpert/hot-toast';
+import { Actions, ofType } from '@ngrx/effects';
 
 @Component({
   imports: [Button, RouterLink, FormField, FormsModule, FormErrors],
@@ -19,12 +21,27 @@ import { toSignal } from '@angular/core/rxjs-interop';
 })
 export class Login {
   private readonly store = inject(Store);
+  private readonly toast = inject(HotToastService);
+  private readonly actions$ = inject(Actions);
+
+  constructor() {
+    this.actions$
+      .pipe(ofType(authAction.loginSuccess), takeUntilDestroyed())
+      .subscribe(() => this.toast.success('Welcome back! You are now signed in.'));
+
+    this.actions$
+      .pipe(ofType(authAction.loginFailure), takeUntilDestroyed())
+      .subscribe(({ error }) => {
+        this.toast.error(error || 'Unable to sign in. Please try again.');
+      });
+  }
+
   protected readonly isLoading = toSignal(this.store.select(authFeature.selectIsLoading), {
     initialValue: false,
   });
   loginModel = signal({
-    username: '',
-    password: '',
+    username: 'johnd',
+    password: 'm38rmF$',
   });
 
   submitted = signal(false);
@@ -38,11 +55,16 @@ export class Login {
   onSubmit(event: Event) {
     event.preventDefault();
 
-    if (this.isLoading()) return;
+    if (this.isLoading()) {
+      this.toast.info('Your sign-in request is already being processed.');
+      return;
+    }
 
     this.submitted.set(true);
     if (this.loginForm().valid()) {
       this.store.dispatch(authAction.login(this.loginForm().value()));
-    } else console.log('form is invalid');
+    } else {
+      this.toast.error('Please fix the errors in the form before submitting.');
+    }
   }
 }
