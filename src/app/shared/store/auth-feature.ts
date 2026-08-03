@@ -1,9 +1,9 @@
-import { createFeature, createReducer, on } from '@ngrx/store';
+import { createFeature, createReducer, createSelector, on } from '@ngrx/store';
 import { authAction } from './auth-action';
 
 export type AuthState = {
   token: string | null;
-  userId: string | null;
+  userId: number | null;
   error: string | null;
   isLoading: boolean;
 };
@@ -19,9 +19,10 @@ export const authFeature = createFeature({
   name: 'auth',
   reducer: createReducer(
     initialAuthState,
-    on(authAction.loginSuccess, (state, { token }) => ({
+    on(authAction.loginSuccess, (state, { token  , userId}) => ({
       ...state,
       token,
+      userId,
       isLoading: false,
     })),
 
@@ -61,5 +62,18 @@ export const authFeature = createFeature({
       isLoading: false,
       error,
     })),
+
+    on (authAction.restoreSession, (state, { token, userId }) => ({
+      ...state,
+      token,
+      userId,
+    })),
   ),
 });
+
+
+export const selectIsLoggedIn = createSelector(
+  authFeature.selectToken,
+  authFeature.selectUserId,
+  (token, userId) => Boolean(token) && userId !== null,
+);

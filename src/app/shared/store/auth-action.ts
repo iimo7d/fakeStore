@@ -11,5 +11,9 @@ export const authAction = createActionGroup({
     register: props<{ id: number; email: string; username: string; password: string }>(),
     registerSuccess: emptyProps(),
     registerFailure: props<{ error: string }>(),
+    restoreSession: props<{
+      token: string;
+      userId: number;
+    }>(),
   },
 });
