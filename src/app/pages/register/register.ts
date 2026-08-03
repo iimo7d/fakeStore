@@ -1,69 +1,126 @@
 import { Component, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { Button } from '../../shared/components/button';
-import { email, form, FormField, minLength, required, validate } from '@angular/forms/signals';
 import { FormsModule } from '@angular/forms';
-import { FormErrors } from '../../shared/components/form-errors';
+import {
+  email,
+  form,
+  FormField,
+  minLength,
+  required,
+  validate,
+} from '@angular/forms/signals';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { authFeature } from '../../shared/store/auth-feature';
+import { HotToastService } from '@ngxpert/hot-toast';
+
+import { Button } from '../../shared/components/button';
+import { FormErrors } from '../../shared/components/form-errors';
 import { authAction } from '../../shared/store/auth-action';
+import { authFeature } from '../../shared/store/auth-feature';
 
 @Component({
-  imports: [RouterLink, Button, FormsModule, FormField, FormErrors],
   selector: 'app-register',
-  templateUrl: 'register.html',
+  imports: [
+    RouterLink,
+    Button,
+    FormsModule,
+    FormField,
+    FormErrors,
+  ],
+  templateUrl: './register.html',
   host: {
-    class: 'min-h-screen flex items-center justify-center bg-slate-100 p-4',
+    class:
+      'min-h-screen flex items-center justify-center bg-slate-100 p-4',
   },
 })
 export class Register {
   private readonly store = inject(Store);
-  protected readonly isLoading = toSignal(this.store.select(authFeature.selectIsLoading), {
-    initialValue: false,
-  });
+  private readonly toast = inject(HotToastService);
 
-  registerModel = signal({
+  protected readonly submitted = signal(false);
+
+  protected readonly isLoading = toSignal(
+    this.store.select(authFeature.selectIsLoading),
+    { initialValue: false },
+  );
+
+  protected readonly registerModel = signal({
     username: '',
     email: '',
     password: '',
     confirmPassword: '',
   });
 
-  submitted = signal(false);
+  protected readonly registerForm = form(
+    this.registerModel,
+    (credentials) => {
+      required(credentials.username, {
+        message: 'Username is required.',
+      });
 
-  registerForm = form(this.registerModel, (r) => {
-    required(r.username, { message: 'Username is required ' });
-    email(r.email, { message: 'Please enter a valid email address' });
-    required(r.email, { message: 'Email is required ' });
-    required(r.password, { message: 'Password is required ' });
-    required(r.confirmPassword, { message: 'Password is required ' });
-    minLength(r.password, 6, { message: 'Password must be at least 6 charcter long' });
-    minLength(r.confirmPassword, 6, { message: 'Password must be at least 6 charcter long' });
+      required(credentials.email, {
+        message: 'Email is required.',
+      });
 
-    validate(r.confirmPassword, ({ value, valueOf }) => {
-      const confirmValue = value();
-      const originalValue = valueOf(r.password);
+      email(credentials.email, {
+        message: 'Please enter a valid email address.',
+      });
 
-      if (confirmValue !== originalValue) {
-        return { kind: 'passwordMismatch', message: 'Passwords do not match' };
-      }
-      return null;
-    });
-  });
+      required(credentials.password, {
+        message: 'Password is required.',
+      });
 
-  onSubmit(event: Event) {
+      minLength(credentials.password, 6, {
+        message: 'Password must be at least 6 characters long.',
+      });
+
+      required(credentials.confirmPassword, {
+        message: 'Please confirm your password.',
+      });
+
+      validate(
+        credentials.confirmPassword,
+        ({ value, valueOf }) => {
+          const password = valueOf(credentials.password);
+          const confirmPassword = value();
+
+          if (confirmPassword !== password) {
+            return {
+              kind: 'passwordMismatch',
+              message: 'Passwords do not match.',
+            };
+          }
+
+          return null;
+        },
+      );
+    },
+  );
+
+  protected onSubmit(event: Event): void {
     event.preventDefault();
 
-    const id = Date.now();
-    const { confirmPassword, ...rest } = this.registerForm().value();
-    const registerRequest = { id, ...rest };
-
-    if (this.isLoading()) return;
+    if (this.isLoading()) {
+      return;
+    }
 
     this.submitted.set(true);
-    if (this.registerForm().valid()) {
-      this.store.dispatch(authAction.register(registerRequest));
-    } else console.log('form is invalid');
+
+    if (this.registerForm().invalid()) {
+      this.toast.error(
+        'Please fix the errors in the form before submitting.',
+      );
+      return;
+    }
+
+    const { confirmPassword, ...credentials } =
+      this.registerForm().value();
+
+    this.store.dispatch(
+      authAction.register({
+        id: Date.now(),
+        ...credentials,
+      }),
+    );
   }
 }

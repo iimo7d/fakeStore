@@ -1,11 +1,13 @@
+import { Register } from './../../pages/register/register';
 import { extractToken, Payload } from './../util/extractToken';
 import { inject } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { AuthApi } from '../services/auth-api';
 import { Router } from '@angular/router';
 import { authAction } from './auth-action';
-import { catchError, map, of, switchMap } from 'rxjs';
+import { catchError, map, of, switchMap, tap } from 'rxjs';
 import { MyStorage } from '../services/storage';
+import { HotToastService } from '@ngxpert/hot-toast';
 
 export const loginEffect = createEffect(
   (
@@ -63,4 +65,52 @@ export const registerEffect = createEffect(
     );
   },
   { functional: true },
+);
+
+export const logoutEffect = createEffect(
+  (actions = inject(Actions), router = inject(Router), storage = inject(MyStorage)) =>
+    actions.pipe(
+      ofType(authAction.logout),
+      tap(() => {
+        storage.removeItem('ngrx_token');
+        void router.navigateByUrl('/login');
+      }),
+    ),
+  { functional: true, dispatch: false },
+);
+
+export const loginNotificationEffect = createEffect(
+  (actions$ = inject(Actions), toast = inject(HotToastService)) =>
+    actions$.pipe(
+      ofType(authAction.loginSuccess, authAction.loginFailure),
+      tap((action) => {
+        if (action.type === authAction.loginSuccess.type) {
+          toast.success('Welcome back!');
+        } else {
+          toast.error(action.error);
+        }
+      }),
+    ),
+  {
+    functional: true,
+    dispatch: false,
+  },
+);
+
+export const registerNotificationEffect = createEffect(
+  (actions$ = inject(Actions), toast = inject(HotToastService)) =>
+    actions$.pipe(
+      ofType(authAction.registerSuccess, authAction.registerFailure),
+      tap((action) => {
+        if (action.type === authAction.registerSuccess.type) {
+          toast.success('Account created successfully.');
+        } else {
+          toast.error(action.error);
+        }
+      }),
+    ),
+  {
+    functional: true,
+    dispatch: false,
+  },
 );

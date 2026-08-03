@@ -1,70 +1,87 @@
 import { Component, inject, signal } from '@angular/core';
-import { Button } from '../../shared/components/button';
-import { RouterLink } from '@angular/router';
-import { form, FormField, minLength, required } from '@angular/forms/signals';
 import { FormsModule } from '@angular/forms';
-import { FormErrors } from '../../shared/components/form-errors';
+import {
+  form,
+  FormField,
+  minLength,
+  required,
+} from '@angular/forms/signals';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
+import { HotToastService } from '@ngxpert/hot-toast';
+
+import { Button } from '../../shared/components/button';
+import { FormErrors } from '../../shared/components/form-errors';
 import { authAction } from '../../shared/store/auth-action';
 import { authFeature } from '../../shared/store/auth-feature';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { HotToastService } from '@ngxpert/hot-toast';
-import { Actions, ofType } from '@ngrx/effects';
 
 @Component({
-  imports: [Button, RouterLink, FormField, FormsModule, FormErrors],
   selector: 'app-login',
-  templateUrl: 'login.html',
+  imports: [
+    Button,
+    RouterLink,
+    FormField,
+    FormsModule,
+    FormErrors,
+  ],
+  templateUrl: './login.html',
   host: {
-    class: 'min-h-screen flex items-center justify-center bg-slate-100 p-4',
+    class:
+      'min-h-screen flex items-center justify-center bg-slate-100 p-4',
   },
 })
 export class Login {
   private readonly store = inject(Store);
   private readonly toast = inject(HotToastService);
-  private readonly actions$ = inject(Actions);
 
-  constructor() {
-    this.actions$
-      .pipe(ofType(authAction.loginSuccess), takeUntilDestroyed())
-      .subscribe(() => this.toast.success('Welcome back! You are now signed in.'));
+  protected readonly submitted = signal(false);
 
-    this.actions$
-      .pipe(ofType(authAction.loginFailure), takeUntilDestroyed())
-      .subscribe(({ error }) => {
-        this.toast.error(error || 'Unable to sign in. Please try again.');
-      });
-  }
+  protected readonly isLoading = toSignal(
+    this.store.select(authFeature.selectIsLoading),
+    { initialValue: false },
+  );
 
-  protected readonly isLoading = toSignal(this.store.select(authFeature.selectIsLoading), {
-    initialValue: false,
-  });
-  loginModel = signal({
+  protected readonly loginModel = signal({
     username: 'johnd',
     password: 'm38rmF$',
   });
 
-  submitted = signal(false);
+  protected readonly loginForm = form(
+    this.loginModel,
+    (credentials) => {
+      required(credentials.username, {
+        message: 'Username is required.',
+      });
 
-  loginForm = form(this.loginModel, (rootpath) => {
-    required(rootpath.username, { message: 'Username is required' });
-    required(rootpath.password, { message: 'Password is required' });
-    minLength(rootpath.password, 6, { message: 'Password must be at least 6 charcter long' });
-  });
+      required(credentials.password, {
+        message: 'Password is required.',
+      });
 
-  onSubmit(event: Event) {
+      minLength(credentials.password, 6, {
+        message: 'Password must be at least 6 characters long.',
+      });
+    },
+  );
+
+  protected onSubmit(event: Event): void {
     event.preventDefault();
 
     if (this.isLoading()) {
-      this.toast.info('Your sign-in request is already being processed.');
       return;
     }
 
     this.submitted.set(true);
-    if (this.loginForm().valid()) {
-      this.store.dispatch(authAction.login(this.loginForm().value()));
-    } else {
-      this.toast.error('Please fix the errors in the form before submitting.');
+
+    if (this.loginForm().invalid()) {
+      this.toast.error(
+        'Please fix the errors in the form before submitting.',
+      );
+      return;
     }
+
+    this.store.dispatch(
+      authAction.login(this.loginForm().value()),
+    );
   }
 }
