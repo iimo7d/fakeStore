@@ -65,33 +65,35 @@ import { Button } from '../../shared/components/button';
               {{ item.price | currency: 'USD' }}
             </p>
 
-            <button
-              type="button"
-              appButton
-              variant="primary"
-              size="sm"
-              [attr.aria-label]="'Add ' + item.title + ' to cart'"
-              (click)="addToCart.emit(item)"
-            >
-              <svg
-                class="size-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                aria-hidden="true"
+            @if (isAuthed()) {
+              <button
+                type="button"
+                appButton
+                variant="primary"
+                size="sm"
+                [attr.aria-label]="'Add ' + item.title + ' to cart'"
+                (click)="addToCart.emit(item)"
               >
-                <circle cx="9" cy="20" r="1" />
-                <circle cx="19" cy="20" r="1" />
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.6L21 8H6"
-                />
-                <path stroke-linecap="round" d="M12 10v4M10 12h4" />
-              </svg>
-              Add to cart
-            </button>
+                <svg
+                  class="size-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <circle cx="9" cy="20" r="1" />
+                  <circle cx="19" cy="20" r="1" />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.6L21 8H6"
+                  />
+                  <path stroke-linecap="round" d="M12 10v4M10 12h4" />
+                </svg>
+                Add to cart
+              </button>
+            }
           </div>
         </div>
       </article>
@@ -101,4 +103,5 @@ import { Button } from '../../shared/components/button';
 export class ProductCard {
   readonly product = input.required<Product>();
   readonly addToCart = output<Product>();
+  readonly isAuthed = input<boolean>(false);
 }

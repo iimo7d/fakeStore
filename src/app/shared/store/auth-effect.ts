@@ -68,11 +68,12 @@ export const registerEffect = createEffect(
 );
 
 export const logoutEffect = createEffect(
-  (actions = inject(Actions), router = inject(Router), storage = inject(MyStorage)) =>
+  (actions = inject(Actions), router = inject(Router), storage = inject(MyStorage) , toast = inject(HotToastService)) =>
     actions.pipe(
       ofType(authAction.logout),
       tap(() => {
         storage.removeItem('ngrx_token');
+        toast.info('You have been logged out.');
         void router.navigateByUrl('/login');
       }),
     ),

@@ -5,6 +5,7 @@ import { map, tap, withLatestFrom } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { cartFeature } from './cart-feature';
 import { cartAction } from './cart-action';
+import { HotToastService } from '@ngxpert/hot-toast';
 
 const CART_STORAGE_KEY = 'ngrxstore_cart';
 export const loadCartEffect = createEffect(
@@ -15,26 +16,26 @@ export const loadCartEffect = createEffect(
         const cartData = storage.getItem(CART_STORAGE_KEY);
         const items = cartData ? JSON.parse(cartData) : [];
         return cartAction.loadCartSuccess({ cartItems: items });
-      })
+      }),
     );
   },
   {
     functional: true,
-  }
+  },
 );
 
 export const addToCartEffect = createEffect(
-  (actions$ = inject(Actions)) => {
+  (actions$ = inject(Actions), toast = inject(HotToastService)) => {
     return actions$.pipe(
       ofType(cartAction.addToCart),
-      map(({ product }) => cartAction .addToCartSuccess({ product }))
+      map(({ product }) => cartAction.addToCartSuccess({ product })),
+      tap(({ product }) => toast.success(`${product.title} added to cart`)),
     );
   },
   {
     functional: true,
-  }
+  },
 );
-
 
 export const persistCartEffect = createEffect(
   (actions$ = inject(Actions), storage = inject(MyStorage), store = inject(Store)) => {
@@ -43,16 +44,16 @@ export const persistCartEffect = createEffect(
         cartAction.addToCartSuccess,
         cartAction.removeFromCart,
         cartAction.updateQuantity,
-        cartAction.clearCart
+        cartAction.clearCart,
       ),
       withLatestFrom(store.select(cartFeature.selectItems)),
       tap(([, items]) => {
         storage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
-      })
+      }),
     );
   },
   {
     functional: true,
     dispatch: false,
-  }
+  },
 );

@@ -39,8 +39,7 @@ export const appConfig: ApplicationConfig = {
     },
     provideHotToastConfig({
       position: 'top-right',
-      duration: 2500,
-      dismissible: true,
+      duration: 1500,
       theme: 'ios',
       usePopover: false,
     }),

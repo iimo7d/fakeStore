@@ -8,6 +8,7 @@ import { productAction } from './store/product-action';
 import { productFeature } from './store/product-feature';
 import { Product as ProductModel } from './types/product-type';
 import { cartAction } from '../cart/stores/cart-action';
+import { selectIsLoggedIn } from '../../shared/store/auth-feature';
 
 @Component({
   selector: 'app-product',
@@ -16,6 +17,10 @@ import { cartAction } from '../cart/stores/cart-action';
 })
 export class Product implements OnInit {
   private readonly store = inject(Store);
+
+  protected readonly isLoggedIn = toSignal(this.store.select(selectIsLoggedIn), {
+    initialValue: false,
+  });
 
   protected searchQuery = signal('');
 

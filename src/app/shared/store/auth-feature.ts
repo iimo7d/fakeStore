@@ -19,7 +19,7 @@ export const authFeature = createFeature({
   name: 'auth',
   reducer: createReducer(
     initialAuthState,
-    on(authAction.loginSuccess, (state, { token  , userId}) => ({
+    on(authAction.loginSuccess, (state, { token, userId }) => ({
       ...state,
       token,
       userId,
@@ -47,11 +47,6 @@ export const authFeature = createFeature({
       error: null,
     })),
 
-    on(authAction.loginSuccess, (state) => ({
-      ...state,
-      isLoading: false,
-    })),
-
     on(authAction.registerSuccess, (state) => ({
       ...state,
       isLoading: false,
@@ -63,14 +58,13 @@ export const authFeature = createFeature({
       error,
     })),
 
-    on (authAction.restoreSession, (state, { token, userId }) => ({
+    on(authAction.restoreSession, (state, { token, userId }) => ({
       ...state,
       token,
       userId,
     })),
   ),
 });
-
 
 export const selectIsLoggedIn = createSelector(
   authFeature.selectToken,
