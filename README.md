@@ -1,59 +1,66 @@
 # FakeStore
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.0.7.
+A small e-commerce front end built with **Angular 22**, powered by the public [FakeStore API](https://fakestoreapi.com/).
+Browse products, register/sign in, manage a cart, and view your profile with a map.
 
-## Development server
+## Features
 
-To start a local development server, run:
+- **Products** – catalog fetched from FakeStore API
+- **Auth** – login & register, token stored client-side, route protection via `authGuard`
+- **Cart** – add/remove items (NgRx state)
+- **Profile** – user details with an interactive [Leaflet](https://leafletjs.com/) / OpenStreetMap map
+- Lazy-loaded routes, toast notifications, Lucide icons
 
-```bash
-ng serve
-```
+## Tech stack
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+| Area | Tools |
+|------|-------|
+| Framework | Angular 22 (standalone components, lazy routes) |
+| State | NgRx Store + Effects (feature stores per page) |
+| Styling | Tailwind CSS 4 |
+| Maps / icons / toasts | Leaflet, lucide-angular, @ngxpert/hot-toast |
+| Tests | Vitest + jsdom |
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
+## Getting started
 
 ```bash
-ng build
+npm install
+npm start          # http://localhost:4200
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+| Script | Purpose |
+|--------|---------|
+| `npm start` | Dev server |
+| `npm run build` | Production build to `dist/` |
+| `npm run watch` | Dev build in watch mode |
+| `npm test` | Run unit tests |
 
-## Running unit tests
+## Project structure
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
+```
+src/app/
+├── core/       header, footer, product-card, auth guard
+├── shared/     button, form-errors, auth API, storage, auth store
+└── pages/
+    ├── product/   list + service + NgRx store
+    ├── cart/      cart page + NgRx store
+    ├── profile/   profile page, map, service, store
+    ├── login/
+    ├── register/
+    └── main-layout.ts
 ```
 
-## Running end-to-end tests
+Each page keeps its own `store/` (actions, effects, feature), `services/`, and `types/`.
 
-For end-to-end (e2e) testing, run:
+## Routes
 
-```bash
-ng e2e
-```
+| Path | Page | Guarded |
+|------|------|---------|
+| `/login`, `/register` | Auth forms | No |
+| `/product` (default) | Product list | No |
+| `/cart` | Cart | Yes |
+| `/profile` | Profile | Yes |
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+## API
 
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Base URL is configured in `src/app/app.config.ts` (`https://fakestoreapi.com/`).
